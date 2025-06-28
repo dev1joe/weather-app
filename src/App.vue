@@ -1,115 +1,164 @@
 <script setup>
-import Card from './components/Card.vue';
-import Navbar from './components/Navbar.vue';
+import { ref, onMounted, isReadonly } from 'vue';
+import * as utils from './utils/dataUtils.js';
 import Sidebar from './components/Sidebar.vue';
-import { ref, onMounted } from 'vue';
+import DarkModeSwitch from './components/DarkModeSwitch.vue';
+import DayCard from './components/DayCard.vue';
 
+const originalData = ref([]);
 const data = ref([]);
 const photo = ref('');
 const selectedLocation = ref('London');
 const dayCount = ref(7);
+const queryTimeout = ref(null);
+const isDarkMode = ref(localStorage.theme === "dark");
+const metric = ref('c');
+const showHours = ref(true);
+const hourlyScrollRef = ref(null);
 
-
-/* TODO: Celsius VS Fahrenheit
-* get data from api result
-* extract celsius data in data_c and fahrenheit data in data_f
-* set data to data_c automatically
-* add C and F buttons
-* add event listener to C and F buttons
-* onclick switch data to either data_c or data_f
-*/
-
-// TODO: weather evaluation e.g. average UV index, low visibility, etc..
-// TODO: add a loading state
-// TODO: custom icons
-
-
-async function fetchWeather() {
-  console.log('Fetching weather data for:', selectedLocation.value);
-
-  let response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${selectedLocation.value}&days=${dayCount.value}`);
-
-  if (response.ok) {
-    let json = await response.json();
-    data.value = json;
-
-    await fetchPhoto();
-    console.log('Weather data fetched successfully:', data.value);
+// theme
+function toggleTheme() {
+  if (localStorage.theme === "dark") {
+    document.documentElement.classList.remove('dark');
+    localStorage.theme = "light";
+    isDarkMode.value = false;
   } else {
-    console.log('Error fetching weather data:', response.statusText);
+    document.documentElement.classList.add('dark');
+    localStorage.theme = "dark";
+    isDarkMode.value = true;
   }
 }
 
-async function fetchPhoto() {
-  let photoQuery = `${data.value.location?.name}, ${data.value.location?.country}`;
-  console.log('Fetching photo for query:', photoQuery);
-  let photoResponse = await fetch(`https://api.unsplash.com/search/photos?query=${photoQuery}&client_id=${import.meta.env.VITE_UNSPLASH_API}&per_page=1&orientation=landscape`);
+// temperature metric
+function useCelsius() { // update "metric" variable ?
+  console.log('Using Celsius data');
+  data.value = utils.extractData(originalData.value, 'c');
+  metric.value = 'c';
+  localStorage.metric = 'c';
+}
 
-  if (photoResponse.ok) {
-    let photoJson = await photoResponse.json();
-    photo.value = photoJson.results[0].urls.regular;
-    console.log('Photo data fetched successfully:', photoJson);
-  } else {
-    console.log('Error fetching photo:', photoResponse.statusText);
-  }
+function useFahrenheit() {
+  console.log('Using Fahrenheit data');
+  data.value = utils.extractData(originalData.value, 'f');
+  metric.value = 'f';
+  localStorage.metric = 'f';
+}
+
+// slider
+function scrollHours(direction) {
+  const el = hourlyScrollRef.value;
+  if (!el) return;
+  const scrollAmount = 200; // px per click
+  el.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// data
+function fetchWeather(timeout = 500) {
+  clearTimeout(queryTimeout.value);
+
+  queryTimeout.value = setTimeout(() => {
+    utils.fetchWeather(selectedLocation.value, dayCount.value)
+      .then(json => {
+        originalData.value = json;
+
+        if (localStorage.metric === 'f') {
+          useFahrenheit();
+        } else {
+          useCelsius();
+        }
+
+        localStorage.data = data.value;
+      })
+      .catch(error => console.error('Error fetching weather data:', error));
+  }, timeout);
 }
 
 onMounted(() => {
-  console.log(import.meta.env.VITE_WEATHER_API);
   console.log('App mounted, fetching weather data...');
   console.log('from App component, the location is:', selectedLocation.value);
-  fetchWeather();
+  fetchWeather(0);
 });
 </script>
 
 <template>
-  <!-- TODO: add dark/light mode switch -->
-  <div class="main-container w-dvw h-dvh grid grid-cols-[1fr_3fr]">
-
-    <!-- TODO: pass only pieces of information not the whole data object  -->
-    <Sidebar :data="data" :photo="photo" :location="selectedLocation">
+  <div class="main-container w-dvw h-dvh grid grid-cols-[1fr_3fr] dark:text-white">
+    <Sidebar :data="data" :metric="metric" :photo="photo" :location="selectedLocation">
       <input type="text"
-        class="w-full py-2 pl-10 pr-4 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
-        placeholder="e.g. London" v-model="selectedLocation" @input="fetchWeather" />
+        class="w-full py-2 pl-10 pr-4 z-3 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
+        placeholder="e.g. London" v-model="selectedLocation" @input="fetchWeather()" />
     </Sidebar>
 
     <div class="right-content bg-gray-100 dark:bg-gray-700 px-8">
 
-      <!-- TODO: include a tab for today's timeline -->
-      <div class="upper mt-4 grid grid-cols-[1fr_3fr]">
-        <h1 class="mb-4 ms-4 text-3xl font-bold capitalize">this week</h1>
+      <!-- upper section of the right container -->
+      <div class="upper mt-4 flex justify-between items-center">
+        <div>
+          <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
+            @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
+          <button class="bg-transparent border-none mb-4 ms-4 text-2xl font-bold capitalize text-gray-400"
+            @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this
+            week</button>
+        </div>
 
-        <div class="ms-auto">
-          <button type="button" class="bg-black rounded-4xl size-8 text-center ">&deg;C</button>
-          <button type="button" class="!bg-white !text-black rounded-4xl size-8 text-center ">&deg;F</button>
+        <div class="ms-auto flex items-center gap-2">
+          <DarkModeSwitch :darkMode="isDarkMode" @change="toggleTheme" />
+          <button type="button" @click="useCelsius" class="rounded-4xl size-8 text-center"
+            :class="[(metric === 'c') ? 'bg-yellow-300 text-black' : 'bg-white dark:bg-gray-900']">&deg;C</button>
+          <button type="button" @click="useFahrenheit" class="rounded-4xl size-8 text-center"
+            :class="[(metric === 'f') ? 'bg-yellow-300 text-black' : 'bg-white dark:bg-gray-900']">&deg;F</button>
         </div>
       </div>
 
-      <!-- Cards Section -->
-      <!-- TODO: convert to card component -->
-      <div class="week-weather mb-6">
+      <!-- Day Cards Section -->
+      <div class="mb-6" v-if="!showHours">
         <div class="grid grid-cols-7 gap-2">
-          <div class="day-card p-4 bg-white dark:bg-gray-900 rounded-3xl text-sm text-center"
-            v-for="(day, index) in data.forecast?.forecastday" :key="index">
-            <p class="mb-2">{{ day.date }}</p>
-            <img class="mb-2 mx-auto" :src="day.day.condition.icon" alt="condition icon">
-            <p>
-              <span>{{ Math.floor(day.day.maxtemp_c) }}&deg;</span>
-              <span class="ms-1 text-gray-400">{{ Math.floor(day.day.mintemp_c) }}&deg;</span>
-            </p>
-          </div>
+          <DayCard v-for="(day, index) in data.forecast?.forecastday" :key="index" :day="day.name"
+            :maxtemp="day.maxtemp" :mintemp="day.mintemp" :icon="day.condition.icon" />
         </div>
       </div>
+
+      <!-- Hours Cards Section -->
+      <div class="mb-6 w-full" v-else>
+        <div class="relative" style="max-width: 70vw;">
+          
+          <!-- Left Button -->
+          <button @click="scrollHours(-1)"
+            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
+            style="transform: translate(-70%, -20%);" aria-label="Scroll left">
+            &#8592;
+          </button>
+          
+          <!-- Right Button -->
+          <button @click="scrollHours(1)"
+            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
+            style="transform: translate(70%, -20%);" aria-label="Scroll right">
+            &#8594;
+          </button>
+          
+          <div ref="hourlyScrollRef" class="overflow-x-auto w-full scrollbar-hide" style="max-width: 70vw;">
+            <div class="min-w-max flex gap-2 mb-2">
+              <div v-for="(hour, index) in data.forecast?.forecastday[0].hour" :key="index"
+                class="inline-block p-4 bg-white dark:bg-gray-900 rounded-3xl text-center" style="min-width: 100px;">
+                <p class="">{{ hour?.time }}</p>
+                <img class="mx-auto" :src="hour.condition?.icon" alt="condition icon">
+                <p class="text-2xl">{{ hour?.temp }}&deg;</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
 
       <!-- Highlights section -->
       <div class="highlights">
-        <h1 class="mb-4 ms-4 text-3xl font-bold capitalize">Today's Highlights</h1>
+        <h1 class="mb-4 ms-4 text-2xl font-bold capitalize">Today's Highlights</h1>
 
         <!-- cards -->
         <div class="grid grid-cols-3 gap-4">
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
             <p class="text-gray-400 capitalize mb-4">wind status</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.current?.wind_mph }}</span> km/h</p>
+            <p class="mb-4"><span class="text-6xl">{{ data.current?.wind }}</span> km/h</p>
             <p>{{ data.current?.wind_dir }}</p>
           </div>
 
@@ -121,14 +170,16 @@ onMounted(() => {
 
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
             <p class="text-gray-400 capitalize mb-4">Sunrise & Sunset</p>
-            
+
             <div class="h-10 flex items-center mb-4">
-              <div class="inline-block size-9 rounded-4xl text-center me-2 text-3xl bg-gray-100 dark:bg-gray-700">&uarr;</div>
+              <div class="inline-block size-9 rounded-4xl text-center me-2 text-3xl bg-gray-100 dark:bg-gray-700">&uarr;
+              </div>
               <span class="text-xl">{{ data.forecast?.forecastday[0].astro.sunrise }}</span>
             </div>
-            
+
             <div class="h-10 flex items-center mb-4">
-              <div class="inline-block size-9 rounded-4xl text-center me-2 text-3xl bg-gray-100 dark:bg-gray-700">&darr;</div>
+              <div class="inline-block size-9 rounded-4xl text-center me-2 text-3xl bg-gray-100 dark:bg-gray-700">&darr;
+              </div>
               <span class="text-xl">{{ data.forecast?.forecastday[0].astro.sunset }}</span>
             </div>
           </div>
@@ -140,13 +191,14 @@ onMounted(() => {
 
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
             <p class="text-gray-400 capitalize mb-4">visibility</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.current?.vis_km }}</span> km</p>
+            <p class="mb-4"><span class="text-6xl">{{ data.current?.visibility }}</span> km</p>
             <p>Average</p>
           </div>
 
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
             <p class="text-gray-400 capitalize mb-4">Chance of rain</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.forecast?.forecastday[0].day.daily_chance_of_rain }}</span> %</p>
+            <p class="mb-4"><span class="text-6xl">{{ data.forecast?.forecastday[0].daily_chance_of_rain }}</span> %
+            </p>
           </div>
 
         </div>
