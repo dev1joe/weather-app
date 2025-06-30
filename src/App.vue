@@ -5,14 +5,11 @@ import Sidebar from './components/Sidebar.vue';
 import DarkModeSwitch from './components/DarkModeSwitch.vue';
 import DayCard from './components/DayCard.vue';
 
-const originalData = ref([]);
-const data = ref([]);
-const photo = ref('');
-const selectedLocation = ref('London');
+const data = ref(localStorage.data || []);
+const selectedLocation = ref(localStorage.location || 'London');
 const dayCount = ref(7);
-const queryTimeout = ref(null);
 const isDarkMode = ref(localStorage.theme === "dark");
-const metric = ref('c');
+const metric = ref(localStorage.metric || 'c');
 const showHours = ref(true);
 const hourlyScrollRef = ref(null);
 
@@ -29,21 +26,6 @@ function toggleTheme() {
   }
 }
 
-// temperature metric
-function useCelsius() { // update "metric" variable ?
-  console.log('Using Celsius data');
-  data.value = utils.extractData(originalData.value, 'c');
-  metric.value = 'c';
-  localStorage.metric = 'c';
-}
-
-function useFahrenheit() {
-  console.log('Using Fahrenheit data');
-  data.value = utils.extractData(originalData.value, 'f');
-  metric.value = 'f';
-  localStorage.metric = 'f';
-}
-
 // slider
 function scrollHours(direction) {
   const el = hourlyScrollRef.value;
@@ -51,42 +33,11 @@ function scrollHours(direction) {
   const scrollAmount = 200; // px per click
   el.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
 }
-
-// data
-function fetchWeather(timeout = 500) {
-  clearTimeout(queryTimeout.value);
-
-  queryTimeout.value = setTimeout(() => {
-    utils.fetchWeather(selectedLocation.value, dayCount.value)
-      .then(json => {
-        originalData.value = json;
-
-        if (localStorage.metric === 'f') {
-          useFahrenheit();
-        } else {
-          useCelsius();
-        }
-
-        localStorage.data = data.value;
-      })
-      .catch(error => console.error('Error fetching weather data:', error));
-  }, timeout);
-}
-
-onMounted(() => {
-  console.log('App mounted, fetching weather data...');
-  console.log('from App component, the location is:', selectedLocation.value);
-  fetchWeather(0);
-});
 </script>
 
 <template>
   <div class="main-container w-dvw h-dvh grid grid-cols-[1fr_3fr] dark:text-white">
-    <Sidebar :data="data" :metric="metric" :photo="photo" :location="selectedLocation">
-      <input type="text"
-        class="w-full py-2 pl-10 pr-4 z-3 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
-        placeholder="e.g. London" v-model="selectedLocation" @input="fetchWeather()" />
-    </Sidebar>
+    <Sidebar v-model:data="data" v-model:metric="metric" :dayCount="dayCount" />
 
     <div class="right-content bg-gray-100 dark:bg-gray-700 px-8">
 

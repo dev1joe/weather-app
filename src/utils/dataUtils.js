@@ -5,9 +5,8 @@ export async function fetchWeather(location, dayCount) {
 
     if (response.ok) {
         let json = await response.json();
-        return json;
-        // data.value = json;
         // await fetchPhoto();
+        return json;
     } else {
         // console.log('Error fetching weather data:', response.statusText);
         throw new Error(`Error fetching weather data: ${response.statusText}`);
@@ -63,6 +62,7 @@ export function extractData(json, metric = 'c') {
             feelslike: Math.floor(feelsLike),
             humidity: json.current.humidity,
             wind: json.current.wind_kph,
+            wind_dir: json.current.wind_dir,
             uv: json.current.uv,
             visibility: json.current.vis_km,
         },

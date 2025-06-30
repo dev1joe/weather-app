@@ -15,11 +15,14 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - [X] include a tab for today's timeline
 - [X] convert day cards into a component
 
+- [X] use search/autocomplete API
+- url: http://api.weatherapi.com/v1/search.json?key=....&q=London
+- [ ] Celsius VS Fahrenheit is Broken, fix it ❗❗
+
 - [ ] dynamically get the location
-- [ ] save location in localStorage
+- [X] save location in localStorage
 
 - [ ] Make the website Responsive
 - [ ] add a loading state
 - [ ] add charts using Apex Charts
 - [ ] extract fetch in a function e.g. fetchData(url, )
-feat: toggle between Celsius and Fahrenheit, toggle dark mode, hourly view, forecast view
