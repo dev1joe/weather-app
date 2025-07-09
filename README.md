@@ -17,7 +17,7 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 
 - [X] use search/autocomplete API
 - url: http://api.weatherapi.com/v1/search.json?key=....&q=London
-- [ ] Celsius VS Fahrenheit is Broken, fix it ❗❗
+- [X] Celsius VS Fahrenheit is Broken, fix it ❗❗
 
 - [ ] dynamically get the location
 - [X] save location in localStorage

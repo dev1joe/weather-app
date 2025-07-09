@@ -4,7 +4,9 @@ import * as utils from './utils/dataUtils.js';
 import Sidebar from './components/Sidebar.vue';
 import DarkModeSwitch from './components/DarkModeSwitch.vue';
 import DayCard from './components/DayCard.vue';
+import GaugeChart from './components/GaugeChart.vue';
 
+const originalData = ref(localStorage.originalData || {});
 const data = ref(localStorage.data || []);
 const selectedLocation = ref(localStorage.location || 'London');
 const dayCount = ref(7);
@@ -12,6 +14,22 @@ const isDarkMode = ref(localStorage.theme === "dark");
 const metric = ref(localStorage.metric || 'c');
 const showHours = ref(true);
 const hourlyScrollRef = ref(null);
+const queryTimeout = ref(null);
+
+// metric
+function useCelsius() { // update "metric" variable ?
+  console.log('Using Celsius data');
+  data.value = utils.extractData(originalData.value, 'c');
+  metric.value = 'c';
+  localStorage.metric = 'c';
+}
+
+function useFahrenheit() {
+  console.log('Using Fahrenheit data');
+  data.value = utils.extractData(originalData.value, 'f');
+  metric.value = 'f';
+  localStorage.metric = 'f';
+}
 
 // theme
 function toggleTheme() {
@@ -30,19 +48,77 @@ function toggleTheme() {
 function scrollHours(direction) {
   const el = hourlyScrollRef.value;
   if (!el) return;
-  const scrollAmount = 200; // px per click
+  const scrollAmount = 200; // pixels per click
   el.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
 }
+
+
+// data
+function fetchWeather(timeout = 500) {
+  clearTimeout(queryTimeout.value);
+
+  queryTimeout.value = setTimeout(() => {
+    utils.fetchWeather(selectedLocation.value, dayCount.value)
+      .then(json => {
+        originalData.value = json;
+        // emit('update:originalData', json);
+        localStorage.originalData = json;
+
+        if (localStorage.metric === 'f') {
+          console.log('Using Fahrenheit data');
+
+          // emit('update:data', utils.extractData(originalData, 'f'));
+          data.value = utils.extractData(originalData.value, 'f')
+          localStorage.data = utils.extractData(originalData.value, 'f');
+
+          // emit('update:metric', 'f');
+          metric.value = 'f';
+          localStorage.metric = 'f';
+        } else {
+          console.log('Using Celsius data');
+
+          // emit('update:data', utils.extractData(originalData, 'c'));
+          data.value = utils.extractData(originalData.value, 'c');
+          localStorage.data = utils.extractData(originalData.value, 'c');
+
+          // emit('update:metric', 'c');
+          metric.value = 'c';
+          localStorage.metric = 'c';
+        }
+
+        // localStorage.data = data;
+        localStorage.location = selectedLocation.value;
+
+        // utils.fetchPhoto(selectedLocation.value)
+        //   .then(photoUrl => {
+        //     photo.value = photoUrl;
+        //     localStorage.photo = photoUrl;
+        //     console.log('Photo fetched:', photo.value);
+        //   })
+        //   .catch(error => console.error('Error fetching photo:', error));
+      })
+      .catch(error => console.error('Error fetching weather data:', error));
+  }, timeout);
+}
+
+onMounted(() => {
+  console.log('App mounted, fetching weather data...');
+  console.log('from App component, the location is:', selectedLocation.value);
+  fetchWeather(0);
+});
 </script>
 
 <template>
   <div class="main-container w-dvw h-dvh grid grid-cols-[1fr_3fr] dark:text-white">
-    <Sidebar v-model:data="data" v-model:metric="metric" :dayCount="dayCount" />
+    <Sidebar v-model:originalData="originalData" v-model:data="data" v-model:location="selectedLocation"
+      @update:location="fetchWeather" v-model:metric="metric" :dayCount="dayCount" />
 
     <div class="right-content bg-gray-100 dark:bg-gray-700 px-8">
 
       <!-- upper section of the right container -->
       <div class="upper mt-4 flex justify-between items-center">
+
+        <!-- Hourly VS Daily Data -->
         <div>
           <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
             @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
@@ -51,6 +127,7 @@ function scrollHours(direction) {
             week</button>
         </div>
 
+        <!-- Settings -->
         <div class="ms-auto flex items-center gap-2">
           <DarkModeSwitch :darkMode="isDarkMode" @change="toggleTheme" />
           <button type="button" @click="useCelsius" class="rounded-4xl size-8 text-center"
@@ -71,21 +148,21 @@ function scrollHours(direction) {
       <!-- Hours Cards Section -->
       <div class="mb-6 w-full" v-else>
         <div class="relative" style="max-width: 70vw;">
-          
+
           <!-- Left Button -->
           <button @click="scrollHours(-1)"
             class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
             style="transform: translate(-70%, -20%);" aria-label="Scroll left">
             &#8592;
           </button>
-          
+
           <!-- Right Button -->
           <button @click="scrollHours(1)"
             class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
             style="transform: translate(70%, -20%);" aria-label="Scroll right">
             &#8594;
           </button>
-          
+
           <div ref="hourlyScrollRef" class="overflow-x-auto w-full scrollbar-hide" style="max-width: 70vw;">
             <div class="min-w-max flex gap-2 mb-2">
               <div v-for="(hour, index) in data.forecast?.forecastday[0].hour" :key="index"
@@ -136,8 +213,10 @@ function scrollHours(direction) {
           </div>
 
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">UV index</p>
-            <p class="text-6xl mb-4 text-center">{{ data.current?.uv }}</p>
+            <p class="text-gray-400 capitalize">UV index</p>
+            <!-- <p class="text-6xl mb-4 text-center">{{ data.current?.uv }}</p> -->
+            <!-- <apexchart type="radialBar" :series="[data.current?.uv]" :options="uvOptions"></apexchart> -->
+            <GaugeChart v-if="typeof data.current?.uv === 'number'" :uvIndex="data.current?.uv" class="w-full h-auto" />
           </div>
 
           <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
