@@ -1,57 +1,27 @@
 <script setup>
-import { ref, onMounted, isReadonly } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import * as utils from './utils/dataUtils.js';
 import Sidebar from './components/Sidebar.vue';
-import DarkModeSwitch from './components/DarkModeSwitch.vue';
 import DayCard from './components/DayCard.vue';
 import GaugeChart from './components/GaugeChart.vue';
+import CompassGaugeChart from './components/CompassGaugeChart.vue';
+import Header from './components/Header.vue';
+import HourCard from './components/HourCard.vue';
+import CustomCarousel from './components/CustomCarousel.vue';
+import ThermometerWaterIcon from 'vue-material-design-icons/ThermometerWater.vue';
+import WeatherRainyIcon from 'vue-material-design-icons/WeatherRainy.vue';
+import EyeOutlineIcon from 'vue-material-design-icons/EyeOutline.vue';
 
-const originalData = ref(localStorage.originalData || {});
-const data = ref(localStorage.data || []);
+
+const originalData = inject('originalData');
+const data = inject('data');
+const isDarkMode = inject('isDarkMode');
+const metric = inject('metric');
+
 const selectedLocation = ref(localStorage.location || 'London');
 const dayCount = ref(7);
-const isDarkMode = ref(localStorage.theme === "dark");
-const metric = ref(localStorage.metric || 'c');
 const showHours = ref(true);
-const hourlyScrollRef = ref(null);
 const queryTimeout = ref(null);
-
-// metric
-function useCelsius() { // update "metric" variable ?
-  console.log('Using Celsius data');
-  data.value = utils.extractData(originalData.value, 'c');
-  metric.value = 'c';
-  localStorage.metric = 'c';
-}
-
-function useFahrenheit() {
-  console.log('Using Fahrenheit data');
-  data.value = utils.extractData(originalData.value, 'f');
-  metric.value = 'f';
-  localStorage.metric = 'f';
-}
-
-// theme
-function toggleTheme() {
-  if (localStorage.theme === "dark") {
-    document.documentElement.classList.remove('dark');
-    localStorage.theme = "light";
-    isDarkMode.value = false;
-  } else {
-    document.documentElement.classList.add('dark');
-    localStorage.theme = "dark";
-    isDarkMode.value = true;
-  }
-}
-
-// slider
-function scrollHours(direction) {
-  const el = hourlyScrollRef.value;
-  if (!el) return;
-  const scrollAmount = 200; // pixels per click
-  el.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-}
-
 
 // data
 function fetchWeather(timeout = 500) {
@@ -60,8 +30,8 @@ function fetchWeather(timeout = 500) {
   queryTimeout.value = setTimeout(() => {
     utils.fetchWeather(selectedLocation.value, dayCount.value)
       .then(json => {
-        originalData.value = json;
         // emit('update:originalData', json);
+        originalData.value = json;
         localStorage.originalData = json;
 
         if (localStorage.metric === 'f') {
@@ -104,38 +74,30 @@ function fetchWeather(timeout = 500) {
 onMounted(() => {
   console.log('App mounted, fetching weather data...');
   console.log('from App component, the location is:', selectedLocation.value);
-  fetchWeather(0);
+  // fetchWeather(0);
 });
 </script>
 
 <template>
-  <div class="main-container w-dvw h-dvh grid grid-cols-[1fr_3fr] dark:text-white">
-    <Sidebar v-model:originalData="originalData" v-model:data="data" v-model:location="selectedLocation"
-      @update:location="fetchWeather" v-model:metric="metric" :dayCount="dayCount" />
+  <div
+    class="main-container w-dvw h-dvh box-border grid sm:grid-cols-1 md:grid-cols-[1fr_2fr] md:overflow-hidden xl:grid-cols-[1fr_3fr] dark:text-white"
+    style="border: 3px solid red;">
+    <Sidebar />
 
-    <div class="right-content bg-gray-100 dark:bg-gray-700 px-8">
+    <div class="right-content bg-gray-100 dark:bg-gray-700 px-8 md:overflow-auto" style="border: 3px solid lime;">
 
       <!-- upper section of the right container -->
-      <div class="upper mt-4 flex justify-between items-center">
+      <Header />
 
-        <!-- Hourly VS Daily Data -->
-        <div>
-          <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
-            @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
-          <button class="bg-transparent border-none mb-4 ms-4 text-2xl font-bold capitalize text-gray-400"
-            @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this
-            week</button>
-        </div>
-
-        <!-- Settings -->
-        <div class="ms-auto flex items-center gap-2">
-          <DarkModeSwitch :darkMode="isDarkMode" @change="toggleTheme" />
-          <button type="button" @click="useCelsius" class="rounded-4xl size-8 text-center"
-            :class="[(metric === 'c') ? 'bg-yellow-300 text-black' : 'bg-white dark:bg-gray-900']">&deg;C</button>
-          <button type="button" @click="useFahrenheit" class="rounded-4xl size-8 text-center"
-            :class="[(metric === 'f') ? 'bg-yellow-300 text-black' : 'bg-white dark:bg-gray-900']">&deg;F</button>
-        </div>
+      <!-- Hourly VS Daily Data -->
+      <div>
+        <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
+          @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
+        <button class="bg-transparent border-none mb-4 ms-4 text-2xl font-bold capitalize text-gray-400"
+          @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this
+          week</button>
       </div>
+
 
       <!-- Day Cards Section -->
       <div class="mb-6" v-if="!showHours">
@@ -146,58 +108,42 @@ onMounted(() => {
       </div>
 
       <!-- Hours Cards Section -->
-      <div class="mb-6 w-full" v-else>
-        <div class="relative" style="max-width: 70vw;">
-
-          <!-- Left Button -->
-          <button @click="scrollHours(-1)"
-            class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
-            style="transform: translate(-70%, -20%);" aria-label="Scroll left">
-            &#8592;
-          </button>
-
-          <!-- Right Button -->
-          <button @click="scrollHours(1)"
-            class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
-            style="transform: translate(70%, -20%);" aria-label="Scroll right">
-            &#8594;
-          </button>
-
-          <div ref="hourlyScrollRef" class="overflow-x-auto w-full scrollbar-hide" style="max-width: 70vw;">
-            <div class="min-w-max flex gap-2 mb-2">
-              <div v-for="(hour, index) in data.forecast?.forecastday[0].hour" :key="index"
-                class="inline-block p-4 bg-white dark:bg-gray-900 rounded-3xl text-center" style="min-width: 100px;">
-                <p class="">{{ hour?.time }}</p>
-                <img class="mx-auto" :src="hour.condition?.icon" alt="condition icon">
-                <p class="text-2xl">{{ hour?.temp }}&deg;</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <CustomCarousel v-else>
+        <HourCard v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time="hour.time" :temp="hour.temp"
+          :icon="hour.condition.icon" :key="index" />
+      </CustomCarousel>
 
 
       <!-- Highlights section -->
-      <div class="highlights">
+      <div class="highlights flex-grow overflow-h-auto flex flex-col justify-start" style="outline: 1px solid lime;">
         <h1 class="mb-4 ms-4 text-2xl font-bold capitalize">Today's Highlights</h1>
 
         <!-- cards -->
-        <div class="grid grid-cols-3 gap-4">
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">wind status</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.current?.wind }}</span> km/h</p>
-            <p>{{ data.current?.wind_dir }}</p>
+        <div
+          class="big-cards max-h-full grid gap-2 md:grid-cols-2 md:grid-rows-4 md:grid-flow-col lg:grid-cols-3 lg:grid-rows-[2fr_1fr] lg:grid-flow-row">
+          <!-- md:grid-flow-col -->
+          <!-- compass Gauge -->
+          <div
+            class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl md:row-span-2 md:flex md:flex-col lg:row-[span_1]">
+            <p class="capitalize mb-2">wind status</p>
+            <div class="flex-grow min-h-0">
+              <CompassGaugeChart v-if="typeof data.current?.wind === 'number'" :windSpeed="data.current?.wind"
+                :windDegree="data.current?.wind_degree" />
+            </div>
           </div>
 
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">Humidity</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.current?.humidity }}</span> %</p>
-            <p>Normal</p>
+          <!-- UV index gauge -->
+          <div
+            class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl md:row-span-2 md:flex md:flex-col lg:row-[span_1]">
+            <p class="capitalize mb-2">UV index</p>
+            <div class="flex-grow min-h-0">
+              <GaugeChart v-if="typeof data.current?.uv === 'number'" :uvIndex="data.current?.uv" />
+            </div>
           </div>
 
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">Sunrise & Sunset</p>
+          <!-- Sunrise and Sunset -->
+          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+            <p class="capitalize mb-4">Sunrise & Sunset</p>
 
             <div class="h-10 flex items-center mb-4">
               <div class="inline-block size-9 rounded-4xl text-center me-2 text-3xl bg-gray-100 dark:bg-gray-700">&uarr;
@@ -212,25 +158,51 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize">UV index</p>
-            <!-- <p class="text-6xl mb-4 text-center">{{ data.current?.uv }}</p> -->
-            <!-- <apexchart type="radialBar" :series="[data.current?.uv]" :options="uvOptions"></apexchart> -->
-            <GaugeChart v-if="typeof data.current?.uv === 'number'" :uvIndex="data.current?.uv" class="w-full h-auto" />
+          <!-- Chance of Rain -->
+          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+            <p class="capitalize mb-4">Chance of rain</p>
+            <div class="flex justify-between items-center">
+              <p class="mb-4 text-6xl">
+                {{ data.forecast?.forecastday[0].chance_of_rain }}
+                <span class="text-base opacity-70">%</span>
+              </p>
+              <div class="opacity-70">
+                <WeatherRainyIcon />
+                <p class="capitalize">{{ data.forecast?.forecastday[0].chance_of_rain_eval }}</p>
+              </div>
+            </div>
           </div>
 
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">visibility</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.current?.visibility }}</span> km</p>
-            <p>Average</p>
+          <!-- Humidity -->
+          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+            <p class="capitalize mb-4">Humidity</p>
+            <div class="flex justify-between items-center">
+              <p class="mb-4 text-6xl">
+                {{ data.current?.humidity }}
+                <span class="text-base opacity-70">%</span>
+              </p>
+
+              <div class="opacity-70">
+                <ThermometerWaterIcon />
+                <p class="capitalize">{{ data.current?.humidity_eval }}</p>
+              </div>
+            </div>
           </div>
 
-          <div class="p-4 bg-white dark:bg-gray-900 rounded-3xl ">
-            <p class="text-gray-400 capitalize mb-4">Chance of rain</p>
-            <p class="mb-4"><span class="text-6xl">{{ data.forecast?.forecastday[0].daily_chance_of_rain }}</span> %
-            </p>
+          <!-- Visibility -->
+          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+            <p class="capitalize mb-4">visibility</p>
+            <div class="flex justify-between items-center">
+              <p class="mb-4 text-6xl">
+                {{ data.current?.visibility }}
+                <span class="text-base opacity-70">km</span>
+              </p>
+              <div class="opacity-70">
+                <EyeOutlineIcon />
+                <p class="capitalize">{{ data.current?.visibility_eval }}</p>
+              </div>
+            </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -238,17 +210,19 @@ onMounted(() => {
   </div>
 </template>
 
-<!-- <div class="grid grid-cols-3">
-  <Card />
-  <Card />
-  <Card />
-</div> -->
+<style>
+.background-effect {
+  background: radial-gradient(circle at 50% 50%,
+      rgb(130, 154, 204) 0%,
+      /* Slightly lighter in the center */
+      rgb(41, 53, 77) 70%,
+      /* Transitions to darker */
+      rgba(16, 24, 40) 100%
+      /* Very dark at the edges */
+    );
 
-<!-- <div v-if="data.current" class="grid grid-cols-2 gap-4 justify-center justify-items-center items-center pb-4">
-    <div class="w-full"><img :src="data?.current.condition.icon" alt="" class="w-1/2"></div>
-    <div class="w-full"><h1 class="text-9xl">{{ data?.current.temp_c }}</h1></div>
-    <div class="w-full text-3xl"><p>{{  data?.current.condition.text }}</p></div>
-    <div class="w-full text-3xl"><p>{{ data?.location.name }}, {{ data.location.country }}</p></div>
-  </div>
-
-  <div v-else>Loading Weather data....</div> -->
+  .inner-shadow-dark {
+    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.7) !important;
+  }
+}
+</style>

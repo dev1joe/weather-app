@@ -46,7 +46,8 @@ export function extractData(json, metric = 'c') {
             maxtemp: (metric === 'f')? Math.floor(day.day.maxtemp_f) : Math.floor(day.day.maxtemp_c),
             mintemp: (metric === 'f')? Math.floor(day.day.mintemp_f) : Math.floor(day.day.mintemp_c),
             uv: day.day.uv,
-            daily_chance_of_rain: day.day.daily_chance_of_rain,
+            chance_of_rain: day.day.daily_chance_of_rain,
+            chance_of_rain_eval: evaluateRain(day.day.daily_chance_of_rain),
             condition: {...day.day.condition},
             astro: {...day.astro},
         }
@@ -61,10 +62,13 @@ export function extractData(json, metric = 'c') {
             temp: Math.floor(temp),
             feelslike: Math.floor(feelsLike),
             humidity: json.current.humidity,
+            humidity_eval: evaluateHumidity(json.current.humidity),
             wind: json.current.wind_kph,
             wind_dir: json.current.wind_dir,
+            wind_degree: json.current.wind_degree,
             uv: json.current.uv,
             visibility: json.current.vis_km,
+            visibility_eval: evaluateVisibility(json.current.vis_km),
         },
         location: {
             name: json.location.name,
@@ -95,6 +99,49 @@ function getClockString(date, minutes=false) {
     }
 
     return date.toLocaleTimeString([], queryObject)
+}
+
+function evaluateHumidity(humidity) {
+    if (humidity <= 20) {
+        return 'Very Dry';
+    } else if (humidity <= 40) {
+        return 'Dry';
+    } else if (humidity <= 60) {
+        return 'Comfortable';
+    } else if (humidity <= 80) {
+        return 'Humid';
+    } else {
+        return 'Very Humid';
+    }
+}
+
+function evaluateVisibility (visibility) {
+    // visibility is in km
+    if (visibility <= 1) {
+        return 'Very Low';
+    } else if (visibility <= 4) {
+        return 'Light Fog or Mist';
+    } else if (visibility <= 10) {
+        return 'Good, Maybe Slightly Hazy';
+    } else {
+        return 'Clear';
+    }
+}
+
+function evaluateRain (rainChance) {
+    if (rainChance == 0) {
+        return 'No Chance'
+    } else if (rainChance <= 10) {
+        return 'very low chance';
+    } else if (rainChance <= 30) {
+        return 'slight chance';
+    } else if (rainChance <= 60) {
+        return 'probably going to rain';
+    } else if (rainChance <= 80) {
+        return 'high chance of rain';
+    } else {
+        return 'almost certain';
+    }
 }
 
 export async function fetchPhoto(query, orientation='landscape') {

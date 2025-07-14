@@ -24,5 +24,5 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 
 - [ ] Make the website Responsive
 - [ ] add a loading state
-- [ ] add charts using Apex Charts
+- [X] add charts
 - [ ] extract fetch in a function e.g. fetchData(url, )

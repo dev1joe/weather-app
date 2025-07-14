@@ -1,23 +1,16 @@
 <script setup>
-import { defineProps, ref, onMounted } from 'vue';
+import { ref, inject, onMounted } from 'vue';
 import * as utils from '../utils/dataUtils.js';
 
-const props = defineProps({
-    originalData: Object,
-    data: Object,
-    metric: String,
-    dayCount: Number,
-    location: String
-});
+const originalData = inject('originalData');
+const data = inject('data');
+const metric = inject('metric');
+const selectedLocation = inject('selectedLocation');
+const dayCount = inject('dayCount');
 
-const localLocation = ref(localStorage.location || 'London');
 const photo = ref(localStorage.photo || '');
 const suggestedLocations = ref([]);
 const queryTimeout = ref(null);
-// const originalData = ref({});
-
-const emit = defineEmits(['update:originalData', 'update:data', 'update:location', 'update:metric']);
-// emit('update:data', data.value);
 
 function handleSearch(event, timeout = 500) {
     clearTimeout(queryTimeout.value);
@@ -48,70 +41,54 @@ function handleSearch(event, timeout = 500) {
 
 function setSelectedLocation(location) {
     console.log('Setting selected location:', location);
-    localLocation.value = location;
-    emit('update:location', location);
+    // localLocation.value = location;
+    fetchWeather();
+    selectedLocation.value = location;
+    localStorage.location = location
     suggestedLocations.value = [];
 
-    utils.fetchPhoto(location)
-        .then(photoUrl => {
-            photo.value = photoUrl;
-            localStorage.photo = photoUrl;
-            console.log('Photo fetched:', photo.value);
-        })
-        .catch(error => console.error('Error fetching photo:', error));
-    // fetchWeather(0); // Fetch weather data immediately after setting the location
+    // utils.fetchPhoto(location)
+    //     .then(photoUrl => {
+    //         photo.value = photoUrl;
+    //         localStorage.photo = photoUrl;
+    //         console.log('Photo fetched:', photo.value);
+    //     })
+    //     .catch(error => console.error('Error fetching photo:', error));
 }
 
-// // data
-// function fetchWeather(timeout = 500) {
-//     clearTimeout(queryTimeout.value);
+// data
+function fetchWeather() {
+    utils.fetchWeather(selectedLocation.value, dayCount.value)
+        .then(json => {
+            originalData.value = json;
+            localStorage.originalData = json;
 
-//     queryTimeout.value = setTimeout(() => {
-//         utils.fetchWeather(selectedLocation.value, props.dayCount)
-//             .then(json => {
-//                 // originalData.value = json;
-//                 emit('update:originalData', json);
-//                 localStorage.originalData = json;
+            if (localStorage.metric === 'f') {
+                console.log('Using Fahrenheit data');
 
-//                 if (localStorage.metric === 'f') {
-//                     console.log('Using Fahrenheit data');
+                data.value = utils.extractData(originalData.value, 'f')
+                localStorage.data = utils.extractData(originalData.value, 'f');
 
-//                     emit('update:data', utils.extractData(props.originalData, 'f'));
-//                     localStorage.data = utils.extractData(props.originalData, 'f');
+                metric.value = 'f';
+                localStorage.metric = 'f';
+            } else {
+                console.log('Using Celsius data');
 
-//                     emit('update:metric', 'f');
-//                     localStorage.metric = 'f';
-//                 } else {
-//                     console.log('Using Celsius data');
+                data.value = utils.extractData(originalData.value, 'c');
+                localStorage.data = utils.extractData(originalData.value, 'c');
 
-//                     emit('update:data', utils.extractData(props.originalData, 'c'));
-//                     localStorage.data = utils.extractData(props.originalData, 'c');
+                metric.value = 'c';
+                localStorage.metric = 'c';
+            }
+        })
+        .catch(error => console.error('Error fetching weather data:', error));
+}
 
-//                     emit('update:metric', 'c');
-//                     localStorage.metric = 'c';
-//                 }
-
-//                 // localStorage.data = data;
-//                 localStorage.location = selectedLocation.value;
-
-//                 utils.fetchPhoto(selectedLocation.value)
-//                     .then(photoUrl => {
-//                         photo.value = photoUrl;
-//                         localStorage.photo = photoUrl;
-//                         console.log('Photo fetched:', photo.value);
-//                     })
-//                     .catch(error => console.error('Error fetching photo:', error));
-//             })
-//             .catch(error => console.error('Error fetching weather data:', error));
-//     }, timeout);
-// }
-
-// onMounted(() => {
-//     console.log('App mounted, fetching weather data...');
-//     console.log('from App component, the location is:', selectedLocation.value);
-//     fetchWeather(0);
-// });
-
+onMounted(() => {
+    console.log('App mounted, fetching weather data...');
+    console.log('from App component, the location is:', selectedLocation.value);
+    fetchWeather(0);
+});
 </script>
 
 <template>
@@ -123,13 +100,13 @@ function setSelectedLocation(location) {
 
             <input type="text"
                 class="w-full py-2 pl-10 pr-4 z-3 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
-                placeholder="e.g. London" v-model="localLocation" @input="handleSearch" />
+                placeholder="e.g. London" v-model="selectedLocation" @input="handleSearch" />
 
             <div class="relative w-full">
                 <ul class="w-full absolute overflow-y-auto z-1000 border border-gray-400 rounded-2xl bg-white dark:bg-gray-900"
                     v-show="suggestedLocations.length > 0">
                     <li class="cursor-pointer text-center border-b border-gray-400 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        v-for="loc in suggestedLocations" :key="loc.name" @click="setSelectedLocation(loc.name);">
+                        v-for="loc in suggestedLocations" :key="loc.name" @click="setSelectedLocation(`${loc.name}, ${loc.country}`);">
                         {{ loc.name }}, {{ loc.country }}
                     </li>
                 </ul>

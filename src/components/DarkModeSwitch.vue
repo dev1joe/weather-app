@@ -1,14 +1,12 @@
 <script setup>
-    import { defineProps } from 'vue';
+    import { inject } from 'vue';
 
-    defineProps({
-        darkMode: Boolean,
-    });
+    const isDarkMode = inject('isDarkMode');
 </script>
 
 <template>
     <label class="switch">
-        <input id="input" type="checkbox" :checked="darkMode" />
+        <input id="input" type="checkbox" :checked="isDarkMode" />
         <div class="slider round">
             <div class="sun-moon">
                 <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100">

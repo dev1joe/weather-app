@@ -1,15 +1,13 @@
 <script setup>
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { GaugeChart } from 'echarts/charts';
 import VChart from 'vue-echarts';
 
 const props = defineProps({
-    uvIndex: {
-        type: Number,
-        default: 1.22,
-    },
+    uvIndex: { type: Number, default: 1.22 },
+    primaryColor: { type: String, default: '#999' },
 });
 
 use([CanvasRenderer, GaugeChart]);
@@ -18,8 +16,8 @@ const gaugeOptions = ref({
     series: [
         {
             type: 'gauge',
-            center: ['50%', '90%'],
-            radius: '130%',
+            center: ['50%', '70%'],
+            radius: '90%',
             startAngle: 180,
             endAngle: 0,
             min: 0,
@@ -45,7 +43,7 @@ const gaugeOptions = ref({
                 splitNumber: 5,
                 lineStyle: {
                     width: 2,
-                    color: '#999'
+                    color: props.primaryColor
                 }
             },
             splitLine: {
@@ -53,12 +51,12 @@ const gaugeOptions = ref({
                 length: 14,
                 lineStyle: {
                     width: 3,
-                    color: '#999'
+                    color: props.primaryColor
                 }
             },
             axisLabel: {
                 distance: -20,
-                color: '#999',
+                color: props.primaryColor,
                 fontSize: 20
             },
             anchor: {
@@ -73,7 +71,7 @@ const gaugeOptions = ref({
                 lineHeight: 40,
                 borderRadius: 8,
                 offsetCenter: [0, '-15%'],
-                fontSize: 60,
+                fontSize: 40,
                 fontWeight: 'bolder',
                 formatter: (val) => val.toFixed(2),
                 color: 'inherit'
@@ -82,6 +80,10 @@ const gaugeOptions = ref({
         },
     ]
 });
+
+watch(() => props.uvIndex, (newUV) => {
+    gaugeOptions.value.series[0].data[0] = newUV;
+})
 </script>
 
 <template>
