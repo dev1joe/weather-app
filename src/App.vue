@@ -80,11 +80,10 @@ onMounted(() => {
 
 <template>
   <div
-    class="main-container w-dvw h-dvh box-border grid sm:grid-cols-1 md:grid-cols-[1fr_2fr] md:overflow-hidden xl:grid-cols-[1fr_3fr] dark:text-white"
-    style="border: 3px solid red;">
+    class="main-container w-dvw h-dvh box-border grid sm:grid-cols-1 md:grid-cols-[1fr_2fr] md:overflow-hidden xl:grid-cols-[1fr_3fr] dark:text-white">
     <Sidebar />
 
-    <div class="right-content bg-gray-100 dark:bg-gray-700 px-8 md:overflow-auto" style="border: 3px solid lime;">
+    <div class="right-content bg-gray-100 dark:bg-gray-700 px-8 md:overflow-auto">
 
       <!-- upper section of the right container -->
       <Header />
@@ -115,7 +114,7 @@ onMounted(() => {
 
 
       <!-- Highlights section -->
-      <div class="highlights flex-grow overflow-h-auto flex flex-col justify-start" style="outline: 1px solid lime;">
+      <div class="highlights flex-grow overflow-h-auto flex flex-col justify-start">
         <h1 class="mb-4 ms-4 text-2xl font-bold capitalize">Today's Highlights</h1>
 
         <!-- cards -->

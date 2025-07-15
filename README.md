@@ -10,7 +10,7 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - [X] Celsius VS Fahrenheit
 - [X] Dark VS Light mode
 - [X] save metric (Celsius VS Fahrenheit) in local storage
-- [ ] weather evaluation e.g. average UV index, low visibility, etc..
+- [X] weather evaluation e.g. average UV index, low visibility, etc..
 
 - [X] include a tab for today's timeline
 - [X] convert day cards into a component
