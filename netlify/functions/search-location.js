@@ -9,8 +9,9 @@ exports.handler = async function (event, context) {
 
 
     try {
-        const locationResponse = await fetch(`https://api.weatherapi.com/v1/search.json?key=${WEATHER_API}&q=${location}`);
+        const locationResponse = await fetch(`https://api.weatherapi.com/v1/search.json?key=${WEATHER_API}&q=${encodeURIComponent(location)}`);
         const locationData = await locationResponse.json();
+        console.log('location data from netlify function', locationData);
 
         // Check for WeatherAPI errors
         if (locationData.error) {

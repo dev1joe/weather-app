@@ -12,6 +12,7 @@ exports.handler = async function (event, context) {
     try {
         const weatherResponse = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API}&q=${location}&days=${dayCount}`);
         const weatherData = await weatherResponse.json();
+        console.log('weather data from netlify function', weatherData);
 
         // Check for WeatherAPI errors
         if (weatherData.error) {
