@@ -1,7 +1,7 @@
 export async function fetchWeather(location, dayCount) {
     console.log('Fetching weather data for:', location);
 
-    let response = await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${location}&days=${dayCount}`);
+    let response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${location}&days=${dayCount}`);
 
     if (response.ok) {
         let json = await response.json();

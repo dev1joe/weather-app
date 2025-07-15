@@ -24,7 +24,7 @@ function handleSearch(event, timeout = 500) {
             return;
         }
 
-        fetch(`http://api.weatherapi.com/v1/search.json?key=${import.meta.env.VITE_WEATHER_API}&q=${query}`)
+        fetch(`https://api.weatherapi.com/v1/search.json?key=${import.meta.env.VITE_WEATHER_API}&q=${query}`)
             .then(response => response.json())
             .then(locations => {
                 if (locations.length > 0) {
