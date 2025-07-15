@@ -24,7 +24,8 @@ function handleSearch(event, timeout = 500) {
             return;
         }
 
-        fetch(`https://api.weatherapi.com/v1/search.json?key=${import.meta.env.VITE_WEATHER_API}&q=${query}`)
+        // fetch(`https://api.weatherapi.com/v1/search.json?key=${import.meta.env.VITE_WEATHER_API}&q=${query}`)
+        fetch(`/api/search-location?location=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(locations => {
                 if (locations.length > 0) {
@@ -58,7 +59,9 @@ function setSelectedLocation(location) {
 
 // data
 function fetchWeather() {
-    utils.fetchWeather(selectedLocation.value, dayCount.value)
+    // utils.fetchWeather(selectedLocation.value, dayCount.value)
+    fetch(`/api/get-weather-data?location=${encodeURIComponent(selectedLocation.value)}&dayCount=${encodeURIComponent(dayCount.value)}`)
+        .then(response => response.json())
         .then(json => {
             originalData.value = json;
             localStorage.originalData = json;

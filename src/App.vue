@@ -197,7 +197,7 @@ onMounted(() => {
                 <span class="text-base opacity-70">km</span>
               </p>
               <div class="opacity-70">
-                <EyeOutlineIcon />
+                <EyeIcon />
                 <p class="capitalize">{{ data.current?.visibility_eval }}</p>
               </div>
             </div>
