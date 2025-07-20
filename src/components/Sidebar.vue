@@ -95,17 +95,25 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="sidebar bg-white p-6 dark:bg-gray-900 h-full flex flex-col justify-between">
+    <!-- h-full -->
+    <div class="
+        sidebar flex flex-col justify-between bg-inherit p-4">
         <aside
-            class="flex flex-col items-center bg-white rtl:border-r-0 rtl:border-l dark:bg-gray-900 dark:border-gray-700 relative">
+            class="
+            flex flex-col md:flex-row md:justify-around md:items-center
+            xl:flex-col xl:justify-start xl:items-start
+            relative
+            rtl:border-r-0 rtl:border-l 
+            sm:rounded-3xl
+            ">
 
             <!-- <slot /> -->
 
-            <input type="text"
+            <!-- <input type="text"
                 class="w-full py-2 pl-10 pr-4 z-3 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
-                placeholder="e.g. London" v-model="selectedLocation" @input="handleSearch" />
+                placeholder="e.g. London" v-model="selectedLocation" @input="handleSearch" /> -->
 
-            <div class="relative w-full">
+            <!-- <div class="relative w-full">
                 <ul class="w-full absolute overflow-y-auto z-1000 border border-gray-400 rounded-2xl bg-white dark:bg-gray-900"
                     v-show="suggestedLocations.length > 0">
                     <li class="cursor-pointer text-center border-b border-gray-400 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -113,39 +121,36 @@ onMounted(() => {
                         {{ loc.name }}, {{ loc.country }}
                     </li>
                 </ul>
+            </div> -->
+
+            <div class="mb-2 xl:mb-10"> <!-- class="flex items-center xl:flex-col" -->
+                <h1 class="text-4xl mb-2">{{ data.location?.name }}, {{ data.location?.country }}</h1>
+                <p class="text-lg">Tuesday, Feb 10</p>
             </div>
 
-            <img class="w-40 scale-125" :src="data.current?.condition.icon" alt="condition icon">
+            <div class="
+            grid grid-cols-2 items-center gap-2 mb-2 xl:mb-8 
+            xl:justify-items-center xl:grid-cols-1 xl:grid-rows-[1fr_minmax(0,0.5fr)]
+            ">
+                <img class="w-50 scale-125 xl:w-75" :src="data.current?.condition.icon" alt="condition icon">
+                
+                <div>
+                    <div class="flex content-start">
+                        <p class="text-6xl xl:text-9xl font-bold">{{ data.current?.temp }}</p>
+                        <p class="text-4xl">&deg{{ (metric === 'f') ? 'F' : 'C' }}</p>
+                    </div>
 
-            <div class="flex content-start pb-4">
-                <p class="text-7xl">{{ data.current?.temp }}</p>
-                <p class="text-4xl">&deg{{ (metric === 'f') ? 'F' : 'C' }}</p>
+                    <p class="text-lg">{{ data.forecast?.forecastday[0].condition.text }}</p>
+                </div>
             </div>
 
-            <div class="w-full px-4 text-xl">
-                <img :src="data.forecast?.forecastday[0].condition.icon" alt="" class="inline">
-                <span>{{ data.forecast?.forecastday[0].condition.text }}</span>
-            </div>
-
-            <div class="w-full px-4 mb-2 text-xl">
-                <span class="me-2">🌡️</span>
-                <span class="me-2">H: {{ data.forecast?.forecastday[0].maxtemp }} &deg</span>
-                <span>L: {{ data.forecast?.forecastday[0].mintemp }}&deg</span>
-            </div>
-
-            <div class="w-full px-4 mb-2 text-xl">
-                <span>⏰</span>
-                <span class="me-2">{{ data.location?.localtime }}</span>
-            </div>
-
-            <div class="w-full px-4 mb-2 text-xl">
-                <span>⏰</span>
-                <span class="me-2">Last Update:</span>
-                <span class="me-2">{{ data.current?.last_updated }}</span>
-            </div>
         </aside>
-        <hr class="mb-2 border-gray-200 dark:border-gray-600" />
-        <div class="flex justify-center items-center mx-4 py-10 px-15 rounded-4xl bg-cover text-center bg-white"
+        <div class="flex justify-between gap-2">
+            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">High: 29&deg;</div>
+            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">Low: 22&deg;</div>
+        </div>
+        <hr class="hidden xl:block my-2 border-gray-200 dark:border-gray-600" />
+        <div class="hidden xl:flex justify-center items-center py-13 px-15 rounded-4xl bg-cover text-center bg-white"
             :style="{ backgroundImage: `url(${photo})` }">
             <p class="font-bold">{{ data.location?.name }}</p>
         </div>

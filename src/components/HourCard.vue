@@ -19,7 +19,7 @@ defineProps({
 
 <template>
     <div 
-        class="inline-block p-4 bg-white dark:bg-gray-900 rounded-3xl overflow-hidden text-center min-w-[100px]">
+        class="inline-block p-4 bg-inherit rounded-3xl overflow-hidden text-center min-w-[100px]">
         <p class="">{{ time }}</p>
         <img class="mx-auto" :src="icon" alt="condition icon">
         <p class="text-2xl">{{ temp }}&deg;</p>

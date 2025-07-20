@@ -40,3 +40,21 @@ button {
 }
 
 /* my custom css here */
+/* For the element you want to hide the scrollbar on */
+.hide-scrollbar {
+  /* For Webkit browsers (Chrome, Safari, newer Edge, Opera) */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* For Firefox */
+  scrollbar-width: none;
+
+  /* For Internet Explorer and older Edge */
+  -ms-overflow-style: none;
+
+  /* Ensure content overflows to enable scrolling */
+  overflow-y: scroll; /* Or 'auto' if you only want scroll when needed */
+  /* If you want horizontal scrolling hidden: */
+  /* overflow-x: hidden; */
+}

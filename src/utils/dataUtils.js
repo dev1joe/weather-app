@@ -1,33 +1,64 @@
-export async function fetchWeather(location, dayCount) {
-    console.log('Fetching weather data for:', location);
+// export async function fetchWeather(location, dayCount) {
+//     console.log('Fetching weather data for:', location);
 
-    let response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${location}&days=${dayCount}`);
+//     let response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${location}&days=${dayCount}`);
 
-    if (response.ok) {
-        let json = await response.json();
-        // await fetchPhoto();
-        return json;
+//     if (response.ok) {
+//         let json = await response.json();
+//         // await fetchPhoto();
+//         return json;
+//     } else {
+//         // console.log('Error fetching weather data:', response.statusText);
+//         throw new Error(`Error fetching weather data: ${response.statusText}`);
+//     }
+// }
+
+export async function fetchWeather() {
+    // utils.fetchWeather(selectedLocation.value, dayCount.value)
+    fetch(`/api/get-weather-data?location=${encodeURIComponent(selectedLocation.value)}&dayCount=${encodeURIComponent(dayCount.value)}`)
+        .then(response => response.json())
+        .then(json => {
+            originalData.value = json;
+            localStorage.originalData = json;
+
+            return setMetric(json, metric.value);
+        })
+        .catch(error => console.error('Error fetching weather data:', error));
+}
+
+function setMetric(data, metric = 'c') {
+    if (metric === 'f') {
+        console.log('Using Fahrenheit data');
+        localStorage.metric = 'f';
+
+        const metricData = extractData(data, 'f')
+        localStorage.data = metricData;
+        return metricData;
     } else {
-        // console.log('Error fetching weather data:', response.statusText);
-        throw new Error(`Error fetching weather data: ${response.statusText}`);
+        console.log('Using Celsius data');
+        localStorage.metric = 'c';
+
+        const metricData = extractData(data, 'c')
+        localStorage.data = metricData;
+        return metricData;
     }
 }
 
 export function extractData(json, metric = 'c') {
     // current.localtime
-    const localtime = new Date(json.location.localtime);    
+    const localtime = new Date(json.location.localtime);
     const timeString = getDayOfWeek(localtime) + " " + getClockString(localtime, true);
 
     // current.last_updated
     const lastUpdated = new Date(json.current.last_updated);
 
     // current.temperature
-    const temp = (metric === 'f')? json.current.temp_f : json.current.temp_c;
-    const feelsLike = (metric === 'f')? json.current.feelslike_f : json.current.feelslike_c;    
-    
+    const temp = (metric === 'f') ? json.current.temp_f : json.current.temp_c;
+    const feelsLike = (metric === 'f') ? json.current.feelslike_f : json.current.feelslike_c;
+
     // forecast
     // let tmpJson = JSON.parse(JSON.stringify(json)); // deep copy original json
-    
+
     const forecast = json.forecast.forecastday.map(day => {
         let tempDate = new Date(day.date);
 
@@ -37,19 +68,19 @@ export function extractData(json, metric = 'c') {
 
                 return {
                     condition: hour.condition,
-                    temp: (metric === 'f')? Math.floor(hour.temp_f) : Math.floor(hour.temp_c),
-                    feelslike: (metric === 'f')? Math.floor(hour.feelslike_f) : Math.floor(hour.feelslike_c),
+                    temp: (metric === 'f') ? Math.floor(hour.temp_f) : Math.floor(hour.temp_c),
+                    feelslike: (metric === 'f') ? Math.floor(hour.feelslike_f) : Math.floor(hour.feelslike_c),
                     time: getClockString(hourDate),
                 }
             }),
             name: getDayOfWeek(tempDate),
-            maxtemp: (metric === 'f')? Math.floor(day.day.maxtemp_f) : Math.floor(day.day.maxtemp_c),
-            mintemp: (metric === 'f')? Math.floor(day.day.mintemp_f) : Math.floor(day.day.mintemp_c),
+            maxtemp: (metric === 'f') ? Math.floor(day.day.maxtemp_f) : Math.floor(day.day.maxtemp_c),
+            mintemp: (metric === 'f') ? Math.floor(day.day.mintemp_f) : Math.floor(day.day.mintemp_c),
             uv: day.day.uv,
             chance_of_rain: day.day.daily_chance_of_rain,
             chance_of_rain_eval: evaluateRain(day.day.daily_chance_of_rain),
-            condition: {...day.day.condition},
-            astro: {...day.astro},
+            condition: { ...day.day.condition },
+            astro: { ...day.astro },
         }
     });
 
@@ -87,14 +118,14 @@ export function extractData(json, metric = 'c') {
 }
 
 function getDayOfWeek(date) {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];    
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[date.getDay()];
 }
 
-function getClockString(date, minutes=false) {
-    let queryObject = { hour: '2-digit'}
-    
-    if(minutes) {
+function getClockString(date, minutes = false) {
+    let queryObject = { hour: '2-digit' }
+
+    if (minutes) {
         queryObject.minute = '2-digit';
     }
 
@@ -115,20 +146,20 @@ function evaluateHumidity(humidity) {
     }
 }
 
-function evaluateVisibility (visibility) {
+function evaluateVisibility(visibility) {
     // visibility is in km
     if (visibility <= 1) {
         return 'Very Low';
     } else if (visibility <= 4) {
         return 'Light Fog or Mist';
     } else if (visibility <= 10) {
-        return 'Good, Maybe Slightly Hazy';
+        return 'Good, \Slightly Hazy';
     } else {
         return 'Clear';
     }
 }
 
-function evaluateRain (rainChance) {
+function evaluateRain(rainChance) {
     if (rainChance == 0) {
         return 'No Chance'
     } else if (rainChance <= 10) {
@@ -144,7 +175,7 @@ function evaluateRain (rainChance) {
     }
 }
 
-export async function fetchPhoto(query, orientation='landscape') {
+export async function fetchPhoto(query, orientation = 'landscape') {
     // let photoQuery = `${data.value.location?.name}, ${data.value.location?.country}`;
     console.log('Fetching photo for query:', query);
     let photoResponse = await fetch(`https://api.unsplash.com/search/photos?query=${query}&client_id=${import.meta.env.VITE_UNSPLASH_API}&per_page=1&orientation=${orientation}`);

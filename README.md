@@ -19,6 +19,8 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - url: http://api.weatherapi.com/v1/search.json?key=....&q=London
 - [X] Celsius VS Fahrenheit is Broken, fix it ❗❗
 
+- [ ] default to 12 hours system
+
 - [ ] dynamically get the location
 - [X] save location in localStorage
 
@@ -26,3 +28,5 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 - [ ] add a loading state
 - [X] add charts
 - [ ] extract fetch in a function e.g. fetchData(url, )
+
+- [ ] add expanding button beside search bar instead of multiple buttons

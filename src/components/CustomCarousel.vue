@@ -18,19 +18,19 @@ function scrollHours(direction) {
 
             <!-- Left Button -->
             <button @click="scrollHours(-1)"
-                class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
+                class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8 outline-none"
                 style="transform: translate(-70%, -20%);" aria-label="Scroll left">
                 &#8592;
             </button>
 
             <!-- Right Button -->
             <button @click="scrollHours(1)"
-                class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8"
+                class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-gray-900/80 rounded-full shadow size-8 outline-none"
                 style="transform: translate(70%, -20%);" aria-label="Scroll right">
                 &#8594;
             </button>
 
-            <div ref="hourlyScrollRef" class="overflow-x-auto w-full scrollbar-hide" style="max-width: 70vw;">
+            <div ref="hourlyScrollRef" class="overflow-x-auto w-full hide-scrollbar" style="max-width: 70vw;">
                 <div class="min-w-max flex gap-2 mb-2">
                     <slot />
                 </div>

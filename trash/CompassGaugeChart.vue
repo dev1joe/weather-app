@@ -98,7 +98,7 @@ watch(
         gaugeOptions.value.series[0].detail.formatter = () => newSpeed;
 
     }
-)
+);
 </script>
 
 <template>

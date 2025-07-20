@@ -3,11 +3,12 @@ import { ref, onMounted, inject } from 'vue';
 import * as utils from './utils/dataUtils.js';
 import Sidebar from './components/Sidebar.vue';
 import DayCard from './components/DayCard.vue';
-import GaugeChart from './components/GaugeChart.vue';
-import CompassGaugeChart from './components/CompassGaugeChart.vue';
+import CompassChart from './components/CompassChart.vue';
+import UVChart from './components/UVChart.vue';
 import Header from './components/Header.vue';
 import HourCard from './components/HourCard.vue';
 import CustomCarousel from './components/CustomCarousel.vue';
+import NewCarousel from './components/NewCarousel.vue';
 import ThermometerWaterIcon from 'vue-material-design-icons/ThermometerWater.vue';
 import WeatherRainyIcon from 'vue-material-design-icons/WeatherRainy.vue';
 import EyeOutlineIcon from 'vue-material-design-icons/EyeOutline.vue';
@@ -80,68 +81,85 @@ onMounted(() => {
 
 <template>
   <div
-    class="main-container w-dvw h-dvh box-border grid sm:grid-cols-1 md:grid-cols-[1fr_2fr] md:overflow-hidden xl:grid-cols-[1fr_3fr] dark:text-white">
-    <Sidebar />
+    class="
+    main-container
+    w-dvw min-h-screen p-4 overflow-y-auto box-border
+    bg-gray-100 dark:text-white dark:bg-gray-900
+    xl:grid xl:auto-rows-min
+    overflow-x-hidden
+    xl:grid-cols-[1fr_3fr] xl:overflow-hidden xl:p-0
+    ">
+    
+    <Header class="!mb-4 xl:col-start-2 xl:px-4" />
+    <Sidebar class="
+    !p-4 xl:!p-8 rounded-3xl box-border xl:rounded-none
+    xl:h-screen xl:col-start-1 xl:col-end-1 xl:row-start-1 xl:row-end-3 
+    !bg-white dark:!bg-gray-800 dark:border-gray-700
+    " />
 
-    <div class="right-content bg-gray-100 dark:bg-gray-700 px-8 md:overflow-auto">
+    <div style="border: 1px solid lime;" class="
+    right-content
+    box-border md:rounded-3xl
+    px-8 py-4
+    xl:col-start-2
+    /* xl:max-h-dvh */
+    grid
+    bg-inherit
+    "> <!-- md:overflow-auto-->
 
       <!-- upper section of the right container -->
-      <Header />
 
       <!-- Hourly VS Daily Data -->
       <div>
         <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
           @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
         <button class="bg-transparent border-none mb-4 ms-4 text-2xl font-bold capitalize text-gray-400"
-          @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this
-          week</button>
+          @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this week</button>
       </div>
-
 
       <!-- Day Cards Section -->
       <div class="mb-6" v-if="!showHours">
-        <div class="grid grid-cols-7 gap-2">
-          <DayCard v-for="(day, index) in data.forecast?.forecastday" :key="index" :day="day.name"
+        <div class="grid grid-cols-3 xl:grid-cols-7 gap-2">
+          <DayCard class="!bg-white dark:!bg-gray-800" v-for="(day, index) in data.forecast?.forecastday" :key="index" :day="day.name"
             :maxtemp="day.maxtemp" :mintemp="day.mintemp" :icon="day.condition.icon" />
         </div>
       </div>
 
       <!-- Hours Cards Section -->
       <CustomCarousel v-else>
-        <HourCard v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time="hour.time" :temp="hour.temp"
+        <HourCard class="bg-white dark:bg-gray-800" v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time="hour.time" :temp="hour.temp"
           :icon="hour.condition.icon" :key="index" />
       </CustomCarousel>
+      <!-- <NewCarousel /> -->
 
 
       <!-- Highlights section -->
-      <div class="highlights flex-grow overflow-h-auto flex flex-col justify-start">
+      <div class="highlights xl:overflow-hidden">
         <h1 class="mb-4 ms-4 text-2xl font-bold capitalize">Today's Highlights</h1>
 
         <!-- cards -->
-        <div
-          class="big-cards max-h-full grid gap-2 md:grid-cols-2 md:grid-rows-4 md:grid-flow-col lg:grid-cols-3 lg:grid-rows-[2fr_1fr] lg:grid-flow-row">
+        <div class="big-cards xl:overflow-hidden grid gap-2 *:min-h-0 *:overflow-y-auto md:grid-cols-2 md:grid-rows-4 md:grid-flow-col xl:grid-cols-3 xl:grid-rows-[minmax(0,2fr)_minmax(0,1fr)] xl:grid-flow-row">
           <!-- md:grid-flow-col -->
           <!-- compass Gauge -->
-          <div
-            class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl md:row-span-2 md:flex md:flex-col lg:row-[span_1]">
+          <div class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl md:row-span-2 md:flex md:flex-col xl:row-[span_1]">
             <p class="capitalize mb-2">wind status</p>
-            <div class="flex-grow min-h-0">
-              <CompassGaugeChart v-if="typeof data.current?.wind === 'number'" :windSpeed="data.current?.wind"
-                :windDegree="data.current?.wind_degree" />
+            <div class="min-h-0">
+                <CompassChart :windSpeed="data.current?.wind" :windDegree="data.current?.wind_degree" />
+              </div>
             </div>
-          </div>
-
-          <!-- UV index gauge -->
-          <div
-            class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl md:row-span-2 md:flex md:flex-col lg:row-[span_1]">
+            
+            <!-- UV index gauge -->
+            <div
+            class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl md:row-span-2 md:flex md:flex-col xl:row-[span_1]">
             <p class="capitalize mb-2">UV index</p>
-            <div class="flex-grow min-h-0">
-              <GaugeChart v-if="typeof data.current?.uv === 'number'" :uvIndex="data.current?.uv" />
+            <div class="min-h-0">
+              <!-- <GaugeChart v-if="typeof data.current?.uv === 'number'" :uvIndex="data.current?.uv" /> -->
+              <UVChart :uvIndex="data.current?.uv" />
             </div>
           </div>
 
           <!-- Sunrise and Sunset -->
-          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+          <div class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl">
             <p class="capitalize mb-4">Sunrise & Sunset</p>
 
             <div class="h-10 flex items-center mb-4">
@@ -158,47 +176,47 @@ onMounted(() => {
           </div>
 
           <!-- Chance of Rain -->
-          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+          <div class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl">
             <p class="capitalize mb-4">Chance of rain</p>
             <div class="flex justify-between items-center">
-              <p class="mb-4 text-6xl">
-                {{ data.forecast?.forecastday[0].chance_of_rain }}
+              <div class="mb-4 text-6xl">
+                <span>{{ data.forecast?.forecastday[0].chance_of_rain }}</span>
                 <span class="text-base opacity-70">%</span>
-              </p>
+              </div>
               <div class="opacity-70">
                 <WeatherRainyIcon />
-                <p class="capitalize">{{ data.forecast?.forecastday[0].chance_of_rain_eval }}</p>
+                <p class="capitalize text-sm">{{ data.forecast?.forecastday[0].chance_of_rain_eval }}</p>
               </div>
             </div>
           </div>
 
           <!-- Humidity -->
-          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+          <div class="py-4 px-8 bg-white dark:bg-gray-800 rounded-3xl">
             <p class="capitalize mb-4">Humidity</p>
             <div class="flex justify-between items-center">
-              <p class="mb-4 text-6xl">
-                {{ data.current?.humidity }}
+              <div class="mb-4 text-6xl">
+                <span>{{ data.current?.humidity }}</span>
                 <span class="text-base opacity-70">%</span>
-              </p>
+              </div>
 
               <div class="opacity-70">
                 <ThermometerWaterIcon />
-                <p class="capitalize">{{ data.current?.humidity_eval }}</p>
+                <p class="capitalize text-sm">{{ data.current?.humidity_eval }}</p>
               </div>
             </div>
           </div>
 
           <!-- Visibility -->
-          <div class="py-4 px-8 bg-white dark:bg-gray-900 rounded-3xl">
+          <div class="py-4 px-8 bg-white dark:bg-gray-800 rounded-3xl">
             <p class="capitalize mb-4">visibility</p>
             <div class="flex justify-between items-center">
-              <p class="mb-4 text-6xl">
-                {{ data.current?.visibility }}
+              <div class="mb-4 text-6xl">
+                <span>{{ data.current?.visibility }}</span>
                 <span class="text-base opacity-70">km</span>
-              </p>
+              </div>
               <div class="opacity-70">
-                <EyeIcon />
-                <p class="capitalize">{{ data.current?.visibility_eval }}</p>
+                <EyeOutlineIcon />
+                <p class="capitalize text-sm">{{ data.current?.visibility_eval }}</p>
               </div>
             </div>
           </div>

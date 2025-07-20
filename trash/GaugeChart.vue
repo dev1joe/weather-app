@@ -83,7 +83,7 @@ const gaugeOptions = ref({
 
 watch(() => props.uvIndex, (newUV) => {
     gaugeOptions.value.series[0].data[0] = newUV;
-})
+});
 </script>
 
 <template>
