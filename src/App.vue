@@ -97,7 +97,7 @@ onMounted(() => {
     !bg-white dark:!bg-gray-800 dark:border-gray-700
     " />
 
-    <div style="border: 1px solid lime;" class="
+    <div class="
     right-content
     box-border md:rounded-3xl
     px-8 py-4
