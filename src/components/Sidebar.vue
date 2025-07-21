@@ -57,40 +57,10 @@ function setSelectedLocation(location) {
     //     .catch(error => console.error('Error fetching photo:', error));
 }
 
-// data
-function fetchWeather() {
-    // utils.fetchWeather(selectedLocation.value, dayCount.value)
-    fetch(`/api/get-weather-data?location=${encodeURIComponent(selectedLocation.value)}&dayCount=${encodeURIComponent(dayCount.value)}`)
-        .then(response => response.json())
-        .then(json => {
-            originalData.value = json;
-            localStorage.originalData = json;
-
-            if (localStorage.metric === 'f') {
-                console.log('Using Fahrenheit data');
-
-                data.value = utils.extractData(originalData.value, 'f')
-                localStorage.data = utils.extractData(originalData.value, 'f');
-
-                metric.value = 'f';
-                localStorage.metric = 'f';
-            } else {
-                console.log('Using Celsius data');
-
-                data.value = utils.extractData(originalData.value, 'c');
-                localStorage.data = utils.extractData(originalData.value, 'c');
-
-                metric.value = 'c';
-                localStorage.metric = 'c';
-            }
-        })
-        .catch(error => console.error('Error fetching weather data:', error));
-}
-
-onMounted(() => {
+onMounted(async () => {
     console.log('App mounted, fetching weather data...');
     console.log('from App component, the location is:', selectedLocation.value);
-    fetchWeather(0);
+    [originalData.value, data.value] = await utils.fetchWeather(selectedLocation.value, metric.value, dayCount.value);
 });
 </script>
 
@@ -125,7 +95,7 @@ onMounted(() => {
 
             <div class="mb-2 xl:mb-10"> <!-- class="flex items-center xl:flex-col" -->
                 <h1 class="text-4xl mb-2">{{ data.location?.name }}, {{ data.location?.country }}</h1>
-                <p class="text-lg">Tuesday, Feb 10</p>
+                <p class="text-lg"> {{ data.location?.localtime }}</p>
             </div>
 
             <div class="
@@ -146,8 +116,8 @@ onMounted(() => {
 
         </aside>
         <div class="flex justify-between gap-2">
-            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">High: 29&deg;</div>
-            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">Low: 22&deg;</div>
+            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">High: {{ data.forecast?.forecastday[0].maxtemp }}&deg;</div>
+            <div class="bg-gray-100 dark:bg-gray-900 p-4 w-full text-center rounded-2xl text-xl">Low: {{ data.forecast?.forecastday[0].mintemp }}&deg;</div>
         </div>
         <hr class="hidden xl:block my-2 border-gray-200 dark:border-gray-600" />
         <div class="hidden xl:flex justify-center items-center py-13 px-15 rounded-4xl bg-cover text-center bg-white"

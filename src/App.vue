@@ -8,7 +8,6 @@ import UVChart from './components/UVChart.vue';
 import Header from './components/Header.vue';
 import HourCard from './components/HourCard.vue';
 import CustomCarousel from './components/CustomCarousel.vue';
-import NewCarousel from './components/NewCarousel.vue';
 import ThermometerWaterIcon from 'vue-material-design-icons/ThermometerWater.vue';
 import WeatherRainyIcon from 'vue-material-design-icons/WeatherRainy.vue';
 import EyeOutlineIcon from 'vue-material-design-icons/EyeOutline.vue';
@@ -23,54 +22,7 @@ const selectedLocation = ref(localStorage.location || 'London');
 const dayCount = ref(7);
 const showHours = ref(true);
 const queryTimeout = ref(null);
-
-// data
-function fetchWeather(timeout = 500) {
-  clearTimeout(queryTimeout.value);
-
-  queryTimeout.value = setTimeout(() => {
-    utils.fetchWeather(selectedLocation.value, dayCount.value)
-      .then(json => {
-        // emit('update:originalData', json);
-        originalData.value = json;
-        localStorage.originalData = json;
-
-        if (localStorage.metric === 'f') {
-          console.log('Using Fahrenheit data');
-
-          // emit('update:data', utils.extractData(originalData, 'f'));
-          data.value = utils.extractData(originalData.value, 'f')
-          localStorage.data = utils.extractData(originalData.value, 'f');
-
-          // emit('update:metric', 'f');
-          metric.value = 'f';
-          localStorage.metric = 'f';
-        } else {
-          console.log('Using Celsius data');
-
-          // emit('update:data', utils.extractData(originalData, 'c'));
-          data.value = utils.extractData(originalData.value, 'c');
-          localStorage.data = utils.extractData(originalData.value, 'c');
-
-          // emit('update:metric', 'c');
-          metric.value = 'c';
-          localStorage.metric = 'c';
-        }
-
-        // localStorage.data = data;
-        localStorage.location = selectedLocation.value;
-
-        // utils.fetchPhoto(selectedLocation.value)
-        //   .then(photoUrl => {
-        //     photo.value = photoUrl;
-        //     localStorage.photo = photoUrl;
-        //     console.log('Photo fetched:', photo.value);
-        //   })
-        //   .catch(error => console.error('Error fetching photo:', error));
-      })
-      .catch(error => console.error('Error fetching weather data:', error));
-  }, timeout);
-}
+const currentHour = (new Date()).getHours() || 12; // Default to 12 if hours are 0 (midnight)
 
 onMounted(() => {
   console.log('App mounted, fetching weather data...');
@@ -127,8 +79,8 @@ onMounted(() => {
 
       <!-- Hours Cards Section -->
       <CustomCarousel v-else>
-        <HourCard class="bg-white dark:bg-gray-800" v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time="hour.time" :temp="hour.temp"
-          :icon="hour.condition.icon" :key="index" />
+        <HourCard class="bg-white dark:bg-gray-800" v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time12="hour.time12" :time24="hour.time24" :temp="hour.temp"
+          :icon="hour.condition.icon" :key="index" :class="{'!bg-yellow-400 !text-black': hour.time24.includes(currentHour.toString())}" />
       </CustomCarousel>
       <!-- <NewCarousel /> -->
 

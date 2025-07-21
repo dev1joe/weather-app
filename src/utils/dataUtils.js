@@ -1,29 +1,29 @@
-// export async function fetchWeather(location, dayCount) {
-//     console.log('Fetching weather data for:', location);
+export async function fetchSuggestedLocations(query) {
+    if (query.trim() === '') {
+        console.warn('Search input is empty');
+        return [];
+    }
 
-//     let response = await fetch(`https://api.weatherapi.com/v1/forecast.json?key=${import.meta.env.VITE_WEATHER_API}&q=${location}&days=${dayCount}`);
+    const response = await fetch(`/api/search-location?location=${encodeURIComponent(query)}`);
+    const json = await response.json();
 
-//     if (response.ok) {
-//         let json = await response.json();
-//         // await fetchPhoto();
-//         return json;
-//     } else {
-//         // console.log('Error fetching weather data:', response.statusText);
-//         throw new Error(`Error fetching weather data: ${response.statusText}`);
-//     }
-// }
+    if (json.length > 0) {
+        console.log('Suggested locations:', json);
+        return json;
+    } else {
+        console.warn('No locations found for:', query);
+        return [];
+    }
+}
 
-export async function fetchWeather() {
-    // utils.fetchWeather(selectedLocation.value, dayCount.value)
-    fetch(`/api/get-weather-data?location=${encodeURIComponent(selectedLocation.value)}&dayCount=${encodeURIComponent(dayCount.value)}`)
-        .then(response => response.json())
-        .then(json => {
-            originalData.value = json;
-            localStorage.originalData = json;
+export async function fetchWeather(location, metric, dayCount = 7) {
+    const response = await fetch(`/api/get-weather-data?location=${encodeURIComponent(location)}&dayCount=${encodeURIComponent(dayCount)}`);
+    const json = await response.json();
+    localStorage.originalData = json;
+    console.log('Weather data fetched successfully:', json);
 
-            return setMetric(json, metric.value);
-        })
-        .catch(error => console.error('Error fetching weather data:', error));
+    // Process and return the metric data
+    return [json, setMetric(json, metric)];
 }
 
 function setMetric(data, metric = 'c') {
@@ -45,9 +45,12 @@ function setMetric(data, metric = 'c') {
 }
 
 export function extractData(json, metric = 'c') {
-    // current.localtime
-    const localtime = new Date(json.location.localtime);
-    const timeString = getDayOfWeek(localtime) + " " + getClockString(localtime, true);
+    // current.localTime
+    const localTime = new Date(json.location.localtime);
+    // const timeString = getDayOfWeek(localTime) + " " + getClockString(localTime, true);
+
+    const tmpString = localTime.toString().split(" ");
+    const timeString = `${tmpString[0]}, ${tmpString[1]} ${tmpString[2]}`;
 
     // current.last_updated
     const lastUpdated = new Date(json.current.last_updated);
@@ -70,7 +73,8 @@ export function extractData(json, metric = 'c') {
                     condition: hour.condition,
                     temp: (metric === 'f') ? Math.floor(hour.temp_f) : Math.floor(hour.temp_c),
                     feelslike: (metric === 'f') ? Math.floor(hour.feelslike_f) : Math.floor(hour.feelslike_c),
-                    time: getClockString(hourDate),
+                    time12: getClockString(hourDate),
+                    time24: getClockString(hourDate, false),
                 }
             }),
             name: getDayOfWeek(tempDate),
@@ -122,14 +126,14 @@ function getDayOfWeek(date) {
     return days[date.getDay()];
 }
 
-function getClockString(date, minutes = false) {
-    let queryObject = { hour: '2-digit' }
+function getClockString(date, hour12 = true,  minutes = false) {
+    let options = { hour: '2-digit', hour12 };
 
     if (minutes) {
-        queryObject.minute = '2-digit';
+        options.minute = '2-digit';
     }
 
-    return date.toLocaleTimeString([], queryObject)
+    return date.toLocaleTimeString([], options);
 }
 
 function evaluateHumidity(humidity) {

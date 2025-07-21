@@ -168,6 +168,9 @@ watch(() => props.options, (newOptions) => {
 */
 watch(() => props.uvIndex, (newUV) => {
     chartOptions.value.series[0].data[0] = newUV;
+    if (myChart.value) {
+        myChart.value.setOption(chartOptions.value, true); // true for notMerge, to force update
+    }
 });
 </script>
 

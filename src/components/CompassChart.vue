@@ -181,7 +181,9 @@ watch(
     ([newDegree, newSpeed, newPColor]) => {
         chartOptions.value.series[0].data[0].value = newDegree - 180;
         chartOptions.value.series[0].detail.formatter = () => newSpeed;
-
+        if (myChart.value) {
+            myChart.value.setOption(chartOptions.value, true); // true for notMerge, to force update
+        }
     }
 );
 </script>

@@ -1,10 +1,16 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
+import * as utils from '../utils/dataUtils.js';
 import SettingsBar from './SettingsBar.vue';
 import ExpandingButton from './ExpandingButton.vue';
 
 const suggestedLocations = ref([]);
+const selectedLocation = inject('selectedLocation');
+const metric = inject('metric');
+const originalData = inject('originalData');
+const data = inject('data');
 
+const searchBar = ref('');
 const queryTimeout = ref(null);
 
 function handleSearch(event, timeout = 500) {
@@ -13,35 +19,25 @@ function handleSearch(event, timeout = 500) {
     const query = event.target.value;
 
     queryTimeout.value = setTimeout(() => {
-        if (query.trim() === '') {
-            console.warn('Search input is empty');
-            suggestedLocations.value = [];
-            return;
-        }
-
-        // fetch(`https://api.weatherapi.com/v1/search.json?key=${import.meta.env.VITE_WEATHER_API}&q=${query}`)
-        fetch(`/api/search-location?location=${encodeURIComponent(query)}`)
-            .then(response => response.json())
+        utils.fetchSuggestedLocations(query)
             .then(locations => {
-                if (locations.length > 0) {
-                    console.log('Suggested locations:', locations);
-                    suggestedLocations.value = locations;
-                } else {
-                    console.warn('No locations found for:', query);
-                    suggestedLocations.value = [];
-                }
+                suggestedLocations.value = locations;
             })
-            .catch(error => console.error('Error fetching locations:', error));
+            .catch(error => {
+                console.error('Error fetching locations:', error);
+                suggestedLocations.value = [];
+            });
     }, timeout);
 }
 
-function setSelectedLocation(location) {
+async function setSelectedLocation(location) {
     console.log('Setting selected location:', location);
     // localLocation.value = location;
-    fetchWeather();
+    [originalData.value, data.value] = await utils.fetchWeather(location, metric.value);
     selectedLocation.value = location;
     localStorage.location = location
     suggestedLocations.value = [];
+    searchBar.value = "";
 }
 </script>
 
@@ -50,7 +46,7 @@ function setSelectedLocation(location) {
         <div class="grow lg:max-w-3/10">
             <input type="text"
                 class="w-full py-2 pl-5 pr-4 text-gray-700 bg-white border rounded-2xl dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:ring-opacity-40 focus:outline-none focus:ring"
-                placeholder="e.g. London" v-model="selectedLocation" @input="handleSearch" />
+                placeholder="e.g. London" @input="handleSearch" v-model="searchBar" />
 
             <div class="relative w-full" v-show="suggestedLocations.length > 0">
                 <ul
