@@ -8,7 +8,7 @@ const metric = inject('metric');
 const selectedLocation = inject('selectedLocation');
 const dayCount = inject('dayCount');
 
-const photo = ref(localStorage.photo || '');
+const photo = inject('image');
 const suggestedLocations = ref([]);
 const queryTimeout = ref(null);
 

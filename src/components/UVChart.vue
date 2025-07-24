@@ -8,7 +8,7 @@ import { ref, onMounted, onUnmounted, watch, defineProps } from 'vue';
 import { debounce } from 'lodash'; // Make sure to 'npm install lodash' if you use this
 
 const props = defineProps({
-    uvIndex: { type: Number, default: 1.22 },
+    uvIndex: { type: Number, default: 0 },
     primaryColor: { type: String, default: '#999' },
 });
 

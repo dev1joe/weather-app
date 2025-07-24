@@ -8,6 +8,8 @@ import UVChart from './components/UVChart.vue';
 import Header from './components/Header.vue';
 import HourCard from './components/HourCard.vue';
 import CustomCarousel from './components/CustomCarousel.vue';
+import { SwiperSlide } from 'swiper/vue';
+import SwiperCarousel from './components/SwiperCarousel.vue';
 import ThermometerWaterIcon from 'vue-material-design-icons/ThermometerWater.vue';
 import WeatherRainyIcon from 'vue-material-design-icons/WeatherRainy.vue';
 import EyeOutlineIcon from 'vue-material-design-icons/EyeOutline.vue';
@@ -32,16 +34,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="
+  <div class="
     main-container
-    w-dvw min-h-screen p-4 overflow-y-auto box-border
+    max-w-dvw min-h-screen p-4 overflow-y-auto box-border
     bg-gray-100 dark:text-white dark:bg-gray-900
     xl:grid xl:auto-rows-min
     overflow-x-hidden
     xl:grid-cols-[1fr_3fr] xl:overflow-hidden xl:p-0
     ">
-    
+
     <Header class="!mb-4 xl:col-start-2 xl:px-4" />
     <Sidebar class="
     !p-4 xl:!p-8 rounded-3xl box-border xl:rounded-none
@@ -52,7 +53,7 @@ onMounted(() => {
     <div class="
     right-content
     box-border md:rounded-3xl
-    px-8 py-4
+    lg:px-8
     xl:col-start-2
     /* xl:max-h-dvh */
     grid
@@ -66,23 +67,33 @@ onMounted(() => {
         <button class="bg-transparent border-none mb-4 text-2xl font-bold capitalize text-gray-400"
           @click="showHours = true" :class="{ '!text-black dark:!text-white underline': showHours }">today</button>
         <button class="bg-transparent border-none mb-4 ms-4 text-2xl font-bold capitalize text-gray-400"
-          @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this week</button>
+          @click="showHours = false" :class="{ '!text-black dark:!text-white underline': !showHours }">this
+          week</button>
       </div>
 
       <!-- Day Cards Section -->
       <div class="mb-6" v-if="!showHours">
         <div class="grid grid-cols-3 xl:grid-cols-7 gap-2">
-          <DayCard class="!bg-white dark:!bg-gray-800" v-for="(day, index) in data.forecast?.forecastday" :key="index" :day="day.name"
-            :maxtemp="day.maxtemp" :mintemp="day.mintemp" :icon="day.condition.icon" />
+          <DayCard class="!bg-white dark:!bg-gray-800" v-for="(day, index) in data.forecast?.forecastday" :key="index"
+            :day="day.name" :maxtemp="day.maxtemp" :mintemp="day.mintemp" :icon="day.condition.icon" />
         </div>
       </div>
 
       <!-- Hours Cards Section -->
       <CustomCarousel v-else>
-        <HourCard class="bg-white dark:bg-gray-800" v-for="(hour, index) in data.forecast?.forecastday[0].hour" :time12="hour.time12" :time24="hour.time24" :temp="hour.temp"
-          :icon="hour.condition.icon" :key="index" :class="{'!bg-yellow-400 !text-black': hour.time24.includes(currentHour.toString())}" />
+        <HourCard class="bg-white dark:bg-gray-800" v-for="(hour, index) in data.forecast?.forecastday[0].hour"
+          :time12="hour.time12" :temp="hour.temp" :icon="hour.condition.icon" :key="index"
+          :class="{ '!bg-yellow-400 !text-black': (new Date().getHours()) == index }" />
       </CustomCarousel>
-      <!-- <NewCarousel /> -->
+
+      <!-- <div v-else>
+        <SwiperCarousel>
+          <swiper-slide v-for="(hour, index) in data.forecast?.forecastday[0].hour" :key="index">
+            <HourCard class="bg-white dark:bg-gray-800 !w-full !h-full" :class="{ '!bg-yellow-400 !text-black': (new Date().getHours()) == index }"
+              :time12="hour.time12" :time24="hour.time24" :temp="hour.temp" :icon="hour.condition.icon" :key="index"/>
+          </swiper-slide>
+        </SwiperCarousel>
+      </div> -->
 
 
       <!-- Highlights section -->
@@ -90,18 +101,20 @@ onMounted(() => {
         <h1 class="mb-4 ms-4 text-2xl font-bold capitalize">Today's Highlights</h1>
 
         <!-- cards -->
-        <div class="big-cards xl:overflow-hidden grid gap-2 *:min-h-0 *:overflow-y-auto md:grid-cols-2 md:grid-rows-4 md:grid-flow-col xl:grid-cols-3 xl:grid-rows-[minmax(0,2fr)_minmax(0,1fr)] xl:grid-flow-row">
+        <div
+          class="big-cards xl:overflow-hidden grid gap-2 *:min-h-0 *:overflow-y-auto md:grid-cols-2 md:grid-rows-4 md:grid-flow-col xl:grid-cols-3 xl:grid-rows-[minmax(0,2fr)_minmax(0,1fr)] xl:grid-flow-row">
           <!-- md:grid-flow-col -->
           <!-- compass Gauge -->
-          <div class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl md:row-span-2 md:flex md:flex-col xl:row-[span_1]">
+          <div
+            class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl md:row-span-2 md:flex md:flex-col xl:row-[span_1]">
             <p class="capitalize mb-2">wind status</p>
             <div class="min-h-0">
-                <CompassChart :windSpeed="data.current?.wind" :windDegree="data.current?.wind_degree" />
-              </div>
+              <CompassChart :windSpeed="data.current?.wind" :windDegree="data.current?.wind_degree" />
             </div>
-            
-            <!-- UV index gauge -->
-            <div
+          </div>
+
+          <!-- UV index gauge -->
+          <div
             class="py-4 px-8 min-h-0 bg-white dark:bg-gray-800 rounded-3xl md:row-span-2 md:flex md:flex-col xl:row-[span_1]">
             <p class="capitalize mb-2">UV index</p>
             <div class="min-h-0">

@@ -9,6 +9,7 @@ const selectedLocation = inject('selectedLocation');
 const metric = inject('metric');
 const originalData = inject('originalData');
 const data = inject('data');
+const photo = inject('image');
 
 const searchBar = ref('');
 const queryTimeout = ref(null);
@@ -38,6 +39,14 @@ async function setSelectedLocation(location) {
     localStorage.location = location
     suggestedLocations.value = [];
     searchBar.value = "";
+
+    utils.fetchPhoto(location)
+        .then(photoUrl => {
+            photo.value = photoUrl;
+            localStorage.photo = photoUrl;
+            console.log('Photo fetched:', photo.value);
+        })
+        .catch(error => console.error('Error fetching photo:', error));
 }
 </script>
 
