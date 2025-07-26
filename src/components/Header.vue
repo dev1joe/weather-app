@@ -14,6 +14,8 @@ const photo = inject('image');
 const searchBar = ref('');
 const queryTimeout = ref(null);
 
+const isWideScreen = ref(window.innerWidth >= 640);
+
 function handleSearch(event, timeout = 500) {
     clearTimeout(queryTimeout.value);
 
@@ -69,7 +71,7 @@ async function setSelectedLocation(location) {
             </div>
         </div>
 
-        <SettingsBar class="grow-0" />
-        <!-- <ExpandingButton /> -->
+        <SettingsBar class="grow-0" v-if="isWideScreen" />
+        <ExpandingButton v-else />
     </div>
 </template>

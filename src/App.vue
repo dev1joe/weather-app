@@ -191,20 +191,3 @@ onMounted(() => {
 
   </div>
 </template>
-
-<style>
-.background-effect {
-  background: radial-gradient(circle at 50% 50%,
-      rgb(130, 154, 204) 0%,
-      /* Slightly lighter in the center */
-      rgb(41, 53, 77) 70%,
-      /* Transitions to darker */
-      rgba(16, 24, 40) 100%
-      /* Very dark at the edges */
-    );
-
-  .inner-shadow-dark {
-    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.7) !important;
-  }
-}
-</style>

@@ -14,7 +14,7 @@ function scrollHours(direction) {
 
 <template>
     <div class="mb-6 w-full text-center">
-        <div class="relative" style="max-width: 70vw;">
+        <div class="relative max-w-[90vw] xl:max-w-[70vw]">
 
             <!-- Left Button -->
             <button @click="scrollHours(-1)"
@@ -30,7 +30,7 @@ function scrollHours(direction) {
                 &#8594;
             </button>
 
-            <div ref="hourlyScrollRef" class="overflow-x-auto w-full hide-scrollbar" style="max-width: 70vw;">
+            <div ref="hourlyScrollRef" class="overflow-x-auto w-full hide-scrollbar max-w-[90vw] xl:max-w-[70vw]">
                 <div class="min-w-max flex gap-2 mb-2">
                     <slot />
                 </div>
